@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_877b6661866dee704f4e8c1d5144a2ab {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <div style="
+        position: fixed;
+        bottom: 40px;
+        left: 40px;
+        z-index: 9999;
+        background-color: white;
+        padding: 12px;
+        border: 2px solid #888;
+        border-radius: 10px;
+        font-size: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    ">
+        <b>Trail altitude</b><br>
+
+        <div>
+            <span style="background-color:#F6A97A; width:14px; height:14px; display:inline-block; margin-right:6px;"></span>
+            Below 10,000 ft
+        </div>
+
+        <div>
+            <span style="background-color:#F3A6B8; width:14px; height:14px; display:inline-block; margin-right:6px;"></span>
+            10,000–25,000 ft
+        </div>
+
+        <div>
+            <span style="background-color:#B8A7E8; width:14px; height:14px; display:inline-block; margin-right:6px;"></span>
+            25,000–35,000 ft
+        </div>
+
+        <div>
+            <span style="background-color:#6F8DEB; width:14px; height:14px; display:inline-block; margin-right:6px;"></span>
+            Above 35,000 ft
+        </div>
+
+        <div>
+            <span style="background-color:#B8B8B8; width:14px; height:14px; display:inline-block; margin-right:6px;"></span>
+            Unknown altitude
+        </div>
+    </div>
+    
+    
+            <div class="folium-map" id="map_877b6661866dee704f4e8c1d5144a2ab" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_877b6661866dee704f4e8c1d5144a2ab = L.map(
+                "map_877b6661866dee704f4e8c1d5144a2ab",
+                {
+                    center: [52.55388823529412, 6.5494408823529415],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 7,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_adfc0e53e0b02ae15aae96618af86897 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_adfc0e53e0b02ae15aae96618af86897.addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+            var poly_line_020b2f33d3c0c8ef7efc6f13293e980b = L.polyline(
+                [[52.96607, 6.77182], [52.98125, 6.80832]],
+                {"bubblingMouseEvents": true, "color": "#B8A7E8", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#B8A7E8", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_29d1f6ced8d2c86d5f3dd9d5588bde9f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_110d747cfc3c77af805eed7ba5586259 = $(`<div id="html_110d747cfc3c77af805eed7ba5586259" style="width: 100.0%; height: 100.0%;">         Aircraft: 48EF33<br>         Segment: 3<br>         Altitude: 25250 ft<br>         Speed: 464<br>         Heading: 55<br>         Receiver: zi-5110<br>         RSSI: -33.22875260975049<br>         Timestamp: 2026-05-26T15:03:47.383341664+02:00         </div>`)[0];
+                popup_29d1f6ced8d2c86d5f3dd9d5588bde9f.setContent(html_110d747cfc3c77af805eed7ba5586259);
+            
+        
+
+        poly_line_020b2f33d3c0c8ef7efc6f13293e980b.bindPopup(popup_29d1f6ced8d2c86d5f3dd9d5588bde9f)
+        ;
+
+        
+    
+    
+            var poly_line_8a67efd2b886179b3393c87a471cce0b = L.polyline(
+                [[52.79388, 5.73524], [52.79554, 5.73792]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_e490f5f83221d1be8fa2b869baa57f20 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_32344609c4b20629627d70ea8b18c256 = $(`<div id="html_32344609c4b20629627d70ea8b18c256" style="width: 100.0%; height: 100.0%;">         Aircraft: 44CE79<br>         Segment: 1<br>         Altitude: 39000 ft<br>         Speed: 461<br>         Heading: 45<br>         Receiver: zi-5110<br>         RSSI: -34.249087579087416<br>         Timestamp: 2026-05-26T15:03:39.190525967+02:00         </div>`)[0];
+                popup_e490f5f83221d1be8fa2b869baa57f20.setContent(html_32344609c4b20629627d70ea8b18c256);
+            
+        
+
+        poly_line_8a67efd2b886179b3393c87a471cce0b.bindPopup(popup_e490f5f83221d1be8fa2b869baa57f20)
+        ;
+
+        
+    
+    
+            var poly_line_14b3a6253995fe313615e00c9718673d = L.polyline(
+                [[52.79554, 5.73792], [52.80853, 5.75903]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_cb642fab3e81f6dcf1ccd5b38623272f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9d9219a5fb90d2f8213c6b6a27bff791 = $(`<div id="html_9d9219a5fb90d2f8213c6b6a27bff791" style="width: 100.0%; height: 100.0%;">         Aircraft: 44CE79<br>         Segment: 3<br>         Altitude: 39000 ft<br>         Speed: 460<br>         Heading: 45<br>         Receiver: zi-5110<br>         RSSI: -41.610695740398285<br>         Timestamp: 2026-05-26T15:03:47.818467529+02:00         </div>`)[0];
+                popup_cb642fab3e81f6dcf1ccd5b38623272f.setContent(html_9d9219a5fb90d2f8213c6b6a27bff791);
+            
+        
+
+        poly_line_14b3a6253995fe313615e00c9718673d.bindPopup(popup_cb642fab3e81f6dcf1ccd5b38623272f)
+        ;
+
+        
+    
+    
+            var poly_line_98ba2d2b379ed6f5d85b7f01fd60e151 = L.polyline(
+                [[52.80853, 5.75903], [52.81183, 5.76439]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_49f66ffc4188cc9a6534e25640e3b4ef = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f5933f4ea5116052860848eb1b84dc56 = $(`<div id="html_f5933f4ea5116052860848eb1b84dc56" style="width: 100.0%; height: 100.0%;">         Aircraft: 44CE79<br>         Segment: 4<br>         Altitude: 39000 ft<br>         Speed: 460<br>         Heading: 45<br>         Receiver: zi-5110<br>         RSSI: -43.906719303541685<br>         Timestamp: 2026-05-26T15:03:49.893892519+02:00         </div>`)[0];
+                popup_49f66ffc4188cc9a6534e25640e3b4ef.setContent(html_f5933f4ea5116052860848eb1b84dc56);
+            
+        
+
+        poly_line_98ba2d2b379ed6f5d85b7f01fd60e151.bindPopup(popup_49f66ffc4188cc9a6534e25640e3b4ef)
+        ;
+
+        
+    
+    
+            var poly_line_60b007d2418abef5b21fea7bbd4d0bdd = L.polyline(
+                [[52.81183, 5.76439], [52.81356, 5.76712]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_355fbb1dcc2592cd8eceb2a7abb39800 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_acc6057c152e490d36fa33caed3c0ca5 = $(`<div id="html_acc6057c152e490d36fa33caed3c0ca5" style="width: 100.0%; height: 100.0%;">         Aircraft: 44CE79<br>         Segment: 7<br>         Altitude: 39000 ft<br>         Speed: 460<br>         Heading: 45<br>         Receiver: zi-5110<br>         RSSI: -37.44996662214801<br>         Timestamp: 2026-05-26T15:03:51.094261439+02:00         </div>`)[0];
+                popup_355fbb1dcc2592cd8eceb2a7abb39800.setContent(html_acc6057c152e490d36fa33caed3c0ca5);
+            
+        
+
+        poly_line_60b007d2418abef5b21fea7bbd4d0bdd.bindPopup(popup_355fbb1dcc2592cd8eceb2a7abb39800)
+        ;
+
+        
+    
+    
+            var poly_line_3f9bec033399a770ab2bc195e2fba552 = L.polyline(
+                [[52.81356, 5.76712], [52.8257, 5.7869]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_9027b732d6ebf2c9ef5e933128815511 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_fa6448eb3de3c0e4984101ed9f8c9b9a = $(`<div id="html_fa6448eb3de3c0e4984101ed9f8c9b9a" style="width: 100.0%; height: 100.0%;">         Aircraft: 44CE79<br>         Segment: 8<br>         Altitude: 39000 ft<br>         Speed: 460<br>         Heading: 45<br>         Receiver: zi-5110<br>         RSSI: -38.75499967746097<br>         Timestamp: 2026-05-26T15:03:59.069059388+02:00         </div>`)[0];
+                popup_9027b732d6ebf2c9ef5e933128815511.setContent(html_fa6448eb3de3c0e4984101ed9f8c9b9a);
+            
+        
+
+        poly_line_3f9bec033399a770ab2bc195e2fba552.bindPopup(popup_9027b732d6ebf2c9ef5e933128815511)
+        ;
+
+        
+    
+    
+            var poly_line_a3f77501720121bb9160c6129a67bb56 = L.polyline(
+                [[52.16574, 7.1036], [52.16513, 7.10721]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_1eb786a1c24b92347641e1df43d73776 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_77221cf03f5d89a6c9fcc5603a0dfbab = $(`<div id="html_77221cf03f5d89a6c9fcc5603a0dfbab" style="width: 100.0%; height: 100.0%;">         Aircraft: 06A2E9<br>         Segment: 2<br>         Altitude: 39000 ft<br>         Speed: 504<br>         Heading: 104<br>         Receiver: zi-5110<br>         RSSI: -40.99329213420167<br>         Timestamp: 2026-05-26T15:03:43.780287446+02:00         </div>`)[0];
+                popup_1eb786a1c24b92347641e1df43d73776.setContent(html_77221cf03f5d89a6c9fcc5603a0dfbab);
+            
+        
+
+        poly_line_a3f77501720121bb9160c6129a67bb56.bindPopup(popup_1eb786a1c24b92347641e1df43d73776)
+        ;
+
+        
+    
+    
+            var poly_line_c893d5f300850b0770d88003bca934bb = L.polyline(
+                [[52.16513, 7.10721], [52.16211, 7.12628]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_717444fbe2b0f23725072c5f2497deca = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7319497b17d25a454884b57d9898cb31 = $(`<div id="html_7319497b17d25a454884b57d9898cb31" style="width: 100.0%; height: 100.0%;">         Aircraft: 06A2E9<br>         Segment: 4<br>         Altitude: 39000 ft<br>         Speed: 504<br>         Heading: 104<br>         Receiver: zi-5110<br>         RSSI: -39.21288053688482<br>         Timestamp: 2026-05-26T15:03:49.020067256+02:00         </div>`)[0];
+                popup_717444fbe2b0f23725072c5f2497deca.setContent(html_7319497b17d25a454884b57d9898cb31);
+            
+        
+
+        poly_line_c893d5f300850b0770d88003bca934bb.bindPopup(popup_717444fbe2b0f23725072c5f2497deca)
+        ;
+
+        
+    
+    
+            var poly_line_a98d570e1ae9b7ceddfad22113b3ba6b = L.polyline(
+                [[52.16211, 7.12628], [52.16155, 7.12997]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_aaf4d3e75ec1b819bc1b6ef44bf0102d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_76f9a78c65304222fdd75935b4e071d1 = $(`<div id="html_76f9a78c65304222fdd75935b4e071d1" style="width: 100.0%; height: 100.0%;">         Aircraft: 06A2E9<br>         Segment: 6<br>         Altitude: 39000 ft<br>         Speed: 504<br>         Heading: 104<br>         Receiver: zi-5110<br>         RSSI: -38.55710051339442<br>         Timestamp: 2026-05-26T15:03:50.003423191+02:00         </div>`)[0];
+                popup_aaf4d3e75ec1b819bc1b6ef44bf0102d.setContent(html_76f9a78c65304222fdd75935b4e071d1);
+            
+        
+
+        poly_line_a98d570e1ae9b7ceddfad22113b3ba6b.bindPopup(popup_aaf4d3e75ec1b819bc1b6ef44bf0102d)
+        ;
+
+        
+    
+    
+            var poly_line_a80d52c88bc03ace241c5c527a3deb5a = L.polyline(
+                [[52.16155, 7.12997], [52.16099, 7.13366]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_f5dedeac58286b11ffeec7ed263209b6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_04d2f8c9c2bed775a334f6fd04c71e60 = $(`<div id="html_04d2f8c9c2bed775a334f6fd04c71e60" style="width: 100.0%; height: 100.0%;">         Aircraft: 06A2E9<br>         Segment: 7<br>         Altitude: 39000 ft<br>         Speed: 504<br>         Heading: 104<br>         Receiver: zi-5110<br>         RSSI: -29.959973297718406<br>         Timestamp: 2026-05-26T15:03:50.986207101+02:00         </div>`)[0];
+                popup_f5dedeac58286b11ffeec7ed263209b6.setContent(html_04d2f8c9c2bed775a334f6fd04c71e60);
+            
+        
+
+        poly_line_a80d52c88bc03ace241c5c527a3deb5a.bindPopup(popup_f5dedeac58286b11ffeec7ed263209b6)
+        ;
+
+        
+    
+    
+            var poly_line_f52c9ccd37f083f44765280e04a5b544 = L.polyline(
+                [[52.16099, 7.13366], [52.1586, 7.14867]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_82a3f7ce1f5d9779f028ce252d70fc05 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b5f9076b3c11102cbac3fb35f325e497 = $(`<div id="html_b5f9076b3c11102cbac3fb35f325e497" style="width: 100.0%; height: 100.0%;">         Aircraft: 06A2E9<br>         Segment: 9<br>         Altitude: 39000 ft<br>         Speed: 504<br>         Heading: 104<br>         Receiver: zi-5110<br>         RSSI: -49.089204515860715<br>         Timestamp: 2026-05-26T15:03:55.14032957+02:00         </div>`)[0];
+                popup_82a3f7ce1f5d9779f028ce252d70fc05.setContent(html_b5f9076b3c11102cbac3fb35f325e497);
+            
+        
+
+        poly_line_f52c9ccd37f083f44765280e04a5b544.bindPopup(popup_82a3f7ce1f5d9779f028ce252d70fc05)
+        ;
+
+        
+    
+    
+            var poly_line_9e3714aeba40c9348d8147868659ed6b = L.polyline(
+                [[52.1586, 7.14867], [52.15797, 7.15273]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 6}
+            ).addTo(map_877b6661866dee704f4e8c1d5144a2ab);
+        
+    
+        var popup_dc703dc5287d7f1f9f4c63ca90e4ad2b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d7b97dd79a8e909f2b9e3ea6448d9f20 = $(`<div id="html_d7b97dd79a8e909f2b9e3ea6448d9f20" style="width: 100.0%; height: 100.0%;">         Aircraft: 06A2E9<br>         Segment: 12<br>         Altitude: 39000 ft<br>         Speed: 504<br>         Heading: 104<br>         Receiver: zi-5110<br>         RSSI: -43.439613257946945<br>         Timestamp: 2026-05-26T15:03:56.229933269+02:00         </div>`)[0];
+                popup_dc703dc5287d7f1f9f4c63ca90e4ad2b.setContent(html_d7b97dd79a8e909f2b9e3ea6448d9f20);
+            
+        
+
+        poly_line_9e3714aeba40c9348d8147868659ed6b.bindPopup(popup_dc703dc5287d7f1f9f4c63ca90e4ad2b)
+        ;
+
+        
+    
+</script>
+</html>
