@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_f7c1ef2837b36f931ad6ef6ef638d0f2 {
+                #map_0ef380b3ae97d66b40cf672630d067b6 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -54,16 +54,16 @@
 <body>
     
     
-            <div class="folium-map" id="map_f7c1ef2837b36f931ad6ef6ef638d0f2" ></div>
+            <div class="folium-map" id="map_0ef380b3ae97d66b40cf672630d067b6" ></div>
         
 </body>
 <script>
     
     
-            var map_f7c1ef2837b36f931ad6ef6ef638d0f2 = L.map(
-                "map_f7c1ef2837b36f931ad6ef6ef638d0f2",
+            var map_0ef380b3ae97d66b40cf672630d067b6 = L.map(
+                "map_0ef380b3ae97d66b40cf672630d067b6",
                 {
-                    center: [52.36810727272727, 6.752745227272727],
+                    center: [52.55388823529412, 6.5494408823529415],
                     crs: L.CRS.EPSG3857,
                     ...{
   "zoom": 7,
@@ -78,7 +78,7 @@
 
         
     
-            var tile_layer_35772db66809805a0285e41f19a2113d = L.tileLayer(
+            var tile_layer_fb1f6b2d3e9ae06877531d51c0eafbd1 = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {
   "minZoom": 0,
@@ -95,119 +95,73 @@
             );
         
     
-            tile_layer_35772db66809805a0285e41f19a2113d.addTo(map_f7c1ef2837b36f931ad6ef6ef638d0f2);
+            tile_layer_fb1f6b2d3e9ae06877531d51c0eafbd1.addTo(map_0ef380b3ae97d66b40cf672630d067b6);
         
     
-            var poly_line_ee8ca1e6a51c2fd04fcf3b4a838eb80f = L.polyline(
-                [[52.47935, 6.49094], [52.47935, 6.49094], [52.47945, 6.49253], [52.47945, 6.49253], [52.4795, 6.49394], [52.4795, 6.49394], [52.47958, 6.49559], [52.47958, 6.49559], [52.47968, 6.49742], [52.47968, 6.49742], [52.47977, 6.49879], [52.47977, 6.49879], [52.47977, 6.49879], [52.47977, 6.49879], [52.47983, 6.50045], [52.47983, 6.50045], [52.47987, 6.50187], [52.47987, 6.50187], [52.47987, 6.50187]],
-                {"bubblingMouseEvents": true, "color": "#3388ff", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#3388ff", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
-            ).addTo(map_f7c1ef2837b36f931ad6ef6ef638d0f2);
+            var poly_line_bcad7e1fb60f636afea063bbab20241e = L.polyline(
+                [[52.96607, 6.77182], [52.96607, 6.77182], [52.96607, 6.77182], [52.98125, 6.80832], [52.98125, 6.80832], [52.98125, 6.80832]],
+                {"bubblingMouseEvents": true, "color": "#B8A7E8", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#B8A7E8", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 8}
+            ).addTo(map_0ef380b3ae97d66b40cf672630d067b6);
         
     
-        var popup_b6720f0457fa6df7000cbcecc8a668c4 = L.popup({
+        var popup_830df45483a883485c5eaba29e01edd8 = L.popup({
   "maxWidth": "100%",
 });
 
         
             
-                var html_1a6fa23294a82908ff086c126f18bfb2 = $(`<div id="html_1a6fa23294a82908ff086c126f18bfb2" style="width: 100.0%; height: 100.0%;">     Aircraft: 4080E9<br>     Points in trail: 19<br>     First timestamp: 2026-05-26T13:31:10.580059584+02:00<br>     Last timestamp: 2026-05-26T13:31:13.704781959+02:00<br>     Last altitude: 35000<br>     Last receiver: zi-5067     </div>`)[0];
-                popup_b6720f0457fa6df7000cbcecc8a668c4.setContent(html_1a6fa23294a82908ff086c126f18bfb2);
+                var html_8e860471b6c26a15544d15e725afa471 = $(`<div id="html_8e860471b6c26a15544d15e725afa471" style="width: 100.0%; height: 100.0%;">     Aircraft: 48EF33<br>     Points in trail: 6<br>     First timestamp: 2026-05-26T15:03:34.932880668+02:00<br>     Last timestamp: 2026-05-26T15:03:56.341541279+02:00<br>     Trail altitude color based on: 25250 ft<br>     Last receiver: zi-5110     </div>`)[0];
+                popup_830df45483a883485c5eaba29e01edd8.setContent(html_8e860471b6c26a15544d15e725afa471);
             
         
 
-        poly_line_ee8ca1e6a51c2fd04fcf3b4a838eb80f.bindPopup(popup_b6720f0457fa6df7000cbcecc8a668c4)
+        poly_line_bcad7e1fb60f636afea063bbab20241e.bindPopup(popup_830df45483a883485c5eaba29e01edd8)
         ;
 
         
     
     
-            var poly_line_60479cd0ed0591b4d84f7db9348c79c7 = L.polyline(
-                [[52.29428, 7.61841], [52.29428, 7.61841], [52.29428, 7.61841], [52.29602, 7.61917], [52.29602, 7.61917]],
-                {"bubblingMouseEvents": true, "color": "#3388ff", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#3388ff", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
-            ).addTo(map_f7c1ef2837b36f931ad6ef6ef638d0f2);
+            var poly_line_bfa992d7e4b4eed047333660df3a4715 = L.polyline(
+                [[52.79388, 5.73524], [52.79554, 5.73792], [52.79554, 5.73792], [52.80853, 5.75903], [52.81183, 5.76439], [52.81183, 5.76439], [52.81183, 5.76439], [52.81356, 5.76712], [52.8257, 5.7869], [52.8257, 5.7869], [52.8257, 5.7869], [52.8257, 5.7869], [52.8257, 5.7869]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 8}
+            ).addTo(map_0ef380b3ae97d66b40cf672630d067b6);
         
     
-        var popup_1751efc90f93e3726db99c58d8332c71 = L.popup({
+        var popup_33df436f4956f2e0254c9f3597230509 = L.popup({
   "maxWidth": "100%",
 });
 
         
             
-                var html_7d7329c4cc8027512752cf1bc6ceecb8 = $(`<div id="html_7d7329c4cc8027512752cf1bc6ceecb8" style="width: 100.0%; height: 100.0%;">     Aircraft: 3C4B49<br>     Points in trail: 5<br>     First timestamp: 2026-05-26T13:31:10.580185414+02:00<br>     Last timestamp: 2026-05-26T13:31:11.783169416+02:00<br>     Last altitude: 31050<br>     Last receiver: zi-5110     </div>`)[0];
-                popup_1751efc90f93e3726db99c58d8332c71.setContent(html_7d7329c4cc8027512752cf1bc6ceecb8);
+                var html_4b6b3f1a2d1486384b49f41ff572b62b = $(`<div id="html_4b6b3f1a2d1486384b49f41ff572b62b" style="width: 100.0%; height: 100.0%;">     Aircraft: 44CE79<br>     Points in trail: 13<br>     First timestamp: 2026-05-26T15:03:38.097785578+02:00<br>     Last timestamp: 2026-05-26T15:04:07.480228425+02:00<br>     Trail altitude color based on: 39000 ft<br>     Last receiver: zi-5110     </div>`)[0];
+                popup_33df436f4956f2e0254c9f3597230509.setContent(html_4b6b3f1a2d1486384b49f41ff572b62b);
             
         
 
-        poly_line_60479cd0ed0591b4d84f7db9348c79c7.bindPopup(popup_1751efc90f93e3726db99c58d8332c71)
+        poly_line_bfa992d7e4b4eed047333660df3a4715.bindPopup(popup_33df436f4956f2e0254c9f3597230509)
         ;
 
         
     
     
-            var poly_line_4f52478ec4feb11df0f6494e93d39de9 = L.polyline(
-                [[52.267, 6.69853], [52.267, 6.69853], [52.267, 6.69853], [52.267, 6.69853], [52.26805, 6.698], [52.26805, 6.698], [52.26805, 6.698]],
-                {"bubblingMouseEvents": true, "color": "#3388ff", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#3388ff", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
-            ).addTo(map_f7c1ef2837b36f931ad6ef6ef638d0f2);
+            var poly_line_ea4e5259ee5899a410b3bec6b236e0e3 = L.polyline(
+                [[52.16574, 7.1036], [52.16574, 7.1036], [52.16513, 7.10721], [52.16513, 7.10721], [52.16211, 7.12628], [52.16211, 7.12628], [52.16155, 7.12997], [52.16099, 7.13366], [52.16099, 7.13366], [52.1586, 7.14867], [52.1586, 7.14867], [52.1586, 7.14867], [52.15797, 7.15273], [52.15797, 7.15273], [52.15797, 7.15273]],
+                {"bubblingMouseEvents": true, "color": "#6F8DEB", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#6F8DEB", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 8}
+            ).addTo(map_0ef380b3ae97d66b40cf672630d067b6);
         
     
-        var popup_f25df05f6e1998c493434a8d0d1511f9 = L.popup({
+        var popup_601c3899d466586fdb6e38222d992940 = L.popup({
   "maxWidth": "100%",
 });
 
         
             
-                var html_3916c8ee538d397ba365fbaff73c212a = $(`<div id="html_3916c8ee538d397ba365fbaff73c212a" style="width: 100.0%; height: 100.0%;">     Aircraft: 3D48FE<br>     Points in trail: 7<br>     First timestamp: 2026-05-26T13:31:10.64426809+02:00<br>     Last timestamp: 2026-05-26T13:31:12.546228257+02:00<br>     Last altitude: 5000<br>     Last receiver: zi-5110     </div>`)[0];
-                popup_f25df05f6e1998c493434a8d0d1511f9.setContent(html_3916c8ee538d397ba365fbaff73c212a);
+                var html_5659678577fadaca3f34dd4006be0792 = $(`<div id="html_5659678577fadaca3f34dd4006be0792" style="width: 100.0%; height: 100.0%;">     Aircraft: 06A2E9<br>     Points in trail: 15<br>     First timestamp: 2026-05-26T15:03:42.797880463+02:00<br>     Last timestamp: 2026-05-26T15:04:09.774007119+02:00<br>     Trail altitude color based on: 39000 ft<br>     Last receiver: zi-5110     </div>`)[0];
+                popup_601c3899d466586fdb6e38222d992940.setContent(html_5659678577fadaca3f34dd4006be0792);
             
         
 
-        poly_line_4f52478ec4feb11df0f6494e93d39de9.bindPopup(popup_f25df05f6e1998c493434a8d0d1511f9)
-        ;
-
-        
-    
-    
-            var poly_line_c023a6a4a69e00298bccd49513b35c8d = L.polyline(
-                [[52.04829, 6.58842], [52.04857, 6.58701], [52.04857, 6.58701], [52.04878, 6.58577], [52.04878, 6.58577], [52.04878, 6.58577], [52.04927, 6.5834]],
-                {"bubblingMouseEvents": true, "color": "#3388ff", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#3388ff", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
-            ).addTo(map_f7c1ef2837b36f931ad6ef6ef638d0f2);
-        
-    
-        var popup_6e95b1d7b50be7a68626236d57daf940 = L.popup({
-  "maxWidth": "100%",
-});
-
-        
-            
-                var html_8a313352b30fac8f9d6aa14ca755f072 = $(`<div id="html_8a313352b30fac8f9d6aa14ca755f072" style="width: 100.0%; height: 100.0%;">     Aircraft: 010246<br>     Points in trail: 7<br>     First timestamp: 2026-05-26T13:31:11.189857522+02:00<br>     Last timestamp: 2026-05-26T13:31:13.045613173+02:00<br>     Last altitude: 19425<br>     Last receiver: zi-5067     </div>`)[0];
-                popup_6e95b1d7b50be7a68626236d57daf940.setContent(html_8a313352b30fac8f9d6aa14ca755f072);
-            
-        
-
-        poly_line_c023a6a4a69e00298bccd49513b35c8d.bindPopup(popup_6e95b1d7b50be7a68626236d57daf940)
-        ;
-
-        
-    
-    
-            var poly_line_1024be5ddf2ec2d15d3f084a0b60e11a = L.polyline(
-                [[52.63, 7.36194], [52.63, 7.36194], [52.6301, 7.36534], [52.6301, 7.36534], [52.63014, 7.36862]],
-                {"bubblingMouseEvents": true, "color": "#3388ff", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#3388ff", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
-            ).addTo(map_f7c1ef2837b36f931ad6ef6ef638d0f2);
-        
-    
-        var popup_575e18e28eacdd541d3d4c4fab79e53c = L.popup({
-  "maxWidth": "100%",
-});
-
-        
-            
-                var html_5580d5ec38f108e17591b0c2ee47521f = $(`<div id="html_5580d5ec38f108e17591b0c2ee47521f" style="width: 100.0%; height: 100.0%;">     Aircraft: 4D207C<br>     Points in trail: 5<br>     First timestamp: 2026-05-26T13:31:11.238777659+02:00<br>     Last timestamp: 2026-05-26T13:31:13.201909589+02:00<br>     Last altitude: 37000<br>     Last receiver: zi-5110     </div>`)[0];
-                popup_575e18e28eacdd541d3d4c4fab79e53c.setContent(html_5580d5ec38f108e17591b0c2ee47521f);
-            
-        
-
-        poly_line_1024be5ddf2ec2d15d3f084a0b60e11a.bindPopup(popup_575e18e28eacdd541d3d4c4fab79e53c)
+        poly_line_ea4e5259ee5899a410b3bec6b236e0e3.bindPopup(popup_601c3899d466586fdb6e38222d992940)
         ;
 
         
