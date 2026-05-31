@@ -1,86 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Enschede Flight Tracker</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <meta charset="utf-8">
+    <title>Enschede Live Flight Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        body, html { margin: 0; padding: 0; height: 100%; }
+        #map { width: 100%; height: 100%; }
+        /* 自訂彈出視窗樣式 */
+        .popup-info { font-size: 12px; line-height: 1.4; }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <script>
-        // Initialize the Leaflet map centered near Enschede
-        var map = L.map('map').setView([52.22, 6.89], 9);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
 
-        // These objects will store our active trails and markers
-        var aircraftLines = {};
-        var aircraftMarkers = {};
+<div id="map"></div>
 
-        function fetchAndUpdateMap() {
-            // Fetch the latest data smoothly without reloading the HTML page
-            fetch('trail_points.json?nocache=' + new Date().getTime())
-                .then(response => response.json())
-                .then(data => {
-                    // Group data points by aircraft address
-                    let planes = {};
-                    data.forEach(point => {
-                        if (!planes[point.address]) planes[point.address] = [];
-                        planes[point.address].push(point);
-                    });
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 12px;">
+    <b>Relative Altitude</b><br>
+    <div style="height: 10px; width: 150px; background: linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB); margin: 5px 0;"></div>
+    <div style="display: flex; justify-content: space-between;"><span>Low</span><span>High</span></div>
+</div>
 
-                    // Loop through each plane to draw its trail and update its position
-                    for (let address in planes) {
-                        // Sort points chronologically to draw the flight path correctly
-                        let points = planes[address].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-                        let latlngs = points.map(p => [p.latitude, p.longitude]);
-                        let latestData = points[points.length - 1];
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+    // 初始化地圖 (以恩斯赫德為中心)
+    var map = L.map('map').setView([52.22, 6.89], 10);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-                        // 1. Draw or Update the Trail (Polyline)
-                        if (aircraftLines[address]) {
-                            aircraftLines[address].setLatLngs(latlngs);
-                        } else {
-                            // Assign a random hex color to each new plane's trail
-                            let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-                            aircraftLines[address] = L.polyline(latlngs, {color: randomColor, weight: 4}).addTo(map);
-                        }
-                        
-                        let lastSeenTime = new Date(latestData.timestamp).toLocaleTimeString();
+    // 取得高度顏色 (簡單的線性映射)
+    function getColor(alt) {
+        if (!alt) return '#888';
+        return alt < 10000 ? '#F6A97A' : (alt < 25000 ? '#B8A7E8' : '#6F8DEB');
+    }
 
-                        // 2. Draw or Update the Aircraft Marker and Popup
-                        let popupText = `
-                            <b>Company: ${latestData.company || 'Unknown Airline'}</b><br>
-                            ICAO: ${latestData.address}<br>
-                            Callsign: ${latestData.callsign || 'N/A'}<br>
-                            Altitude: ${latestData.altitude || 'N/A'} ft<br>
-                            Speed: ${latestData.speed || 'N/A'} knots<br>
-                            <hr style="margin: 5px 0;">
-                            Last Seen: ${lastSeenTime}
-                        `;
+    // 讀取我們的 trail_points.json
+    fetch('trail_points.json')
+        .then(response => response.json())
+        .then(data => {
+            // 將點數據按 Aircraft 分組
+            let planes = {};
+            data.forEach(p => {
+                if (!planes[p.address]) planes[p.address] = [];
+                planes[p.address].push(p);
+            });
 
-                        if (aircraftMarkers[address]) {
-                            // Move the existing marker smoothly
-                            aircraftMarkers[address].setLatLng([latestData.latitude, latestData.longitude]);
-                            aircraftMarkers[address].getPopup().setContent(popupText);
-                        } else {
-                            // Create a new marker if it just entered our radar
-                            aircraftMarkers[address] = L.marker([latestData.latitude, latestData.longitude])
-                                .bindPopup(popupText)
-                                .addTo(map);
-                        }
-                    }
-                })
-                .catch(error => console.log("Waiting for fresh trail_points.json data..."));
-        }
-
-        // Run the update function every 5 seconds! (Goodbye page flashing)
-        setInterval(fetchAndUpdateMap, 5000);
-        fetchAndUpdateMap(); // Initial load
-    </script>
+            // 畫線
+            for (let addr in planes) {
+                let points = planes[addr];
+                for (let i = 0; i < points.length - 1; i++) {
+                    L.polyline([
+                        [points[i].latitude, points[i].longitude],
+                        [points[i+1].latitude, points[i+1].longitude]
+                    ], {
+                        color: getColor(points[i].altitude),
+                        weight: 4,
+                        opacity: 0.7
+                    }).addTo(map).bindPopup(`
+                        <div class="popup-info">
+                            <b>Callsign:</b> ${points[i].callsign || 'Unknown'}<br>
+                            <b>Company:</b> ${points[i].company || 'N/A'}<br>
+                            <b>Altitude:</b> ${points[i].altitude || 0} ft<br>
+                            <b>Speed:</b> ${points[i].speed || 0} kt<br>
+                            <b>Time:</b> ${points[i].timestamp}
+                        </div>
+                    `);
+                }
+            }
+        });
+</script>
 </body>
 </html>
