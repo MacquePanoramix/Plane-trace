@@ -22,7 +22,9 @@ AIRLINE_MAP = {
     "EXS": "Jet2",
     "ELY": "EL AI",
     "SAS": "Scandinavian Airlines",
-    "EJU": "easyJet Europe"
+    "EJU": "easyJet Europe",
+    "TRA": "Transavia",
+    "TOM": "TUI Airways"
 }
 
 # ==========================================
@@ -59,6 +61,9 @@ if os.path.exists("trail_points.json"):
     except Exception as e:
         print(f"Warning: Could not read old trail points. Starting fresh. Error: {e}")
 
+# ==========================================
+# 3. Processor Layer: OpenSky API Enrichment
+# ==========================================
 # ==========================================
 # 3. Processor Layer: OpenSky API Enrichment
 # ==========================================
@@ -100,8 +105,10 @@ def get_enriched_data(icao24):
     except Exception as e:
         print(f"Error while searching for {icao_lower}: {e}")
 
+    # --- 修復的地方在這裡！ ---
+    # 如果查不到飛機或是發生錯誤，標記為失敗並回傳安全的預設值，千萬不要去挖 cache！
     failed_attempts[icao_lower] = time.time()
-    return plane_cache[icao_lower]
+    return {"callsign": "Unknown", "company": "Unknown", "country": "Unknown"}
 
 # ==========================================
 # 4. Message Handler Layer (UPDATED)
@@ -292,34 +299,35 @@ def main():
     
     ws_url = "ws://192.87.172.82:1338"
 
-    try:
-        if trail_points:
-            run_startup_scan()
+    while True:
+        try:
+            if trail_points:
+                run_startup_scan()
 
-        print(f"Connecting to {ws_url}...")
-        ws = create_connection(ws_url)
-        print("Connected! Waiting for aircraft messages...")
+            print(f"Connecting to {ws_url}...")
+            ws = create_connection(ws_url)
+            print("Connected! Waiting for aircraft messages...")
 
-        while True:
-            raw_msg = ws.recv()
-            msg = json.loads(raw_msg)
+            while True:
+                raw_msg = ws.recv()
+                msg = json.loads(raw_msg)
 
-            # Check if the message actually contained a valid GPS point
-            point_was_added = handle_message(msg)
-            
-            if point_was_added:
-                valid_points_count += 1
+                # Check if the message actually contained a valid GPS point
+                point_was_added = handle_message(msg)
                 
-                # Only save to file when we have collected 20 REAL GPS points
-                if valid_points_count % 20 == 0:
-                    save_data()
+                if point_was_added:
+                    valid_points_count += 1
+                    
+                    # Only save to file when we have collected 20 REAL GPS points
+                    if valid_points_count % 20 == 0:
+                        save_data()
 
-    except KeyboardInterrupt:
-        print("\nProcess interrupted by user. Shutting down safely...")
-        save_data()
-    except Exception as e:
-        print(f"\nA connection error occurred: {e}")
-        save_data()
+        except KeyboardInterrupt:
+            print("\nProcess interrupted by user. Shutting down safely...")
+            save_data()
+        except Exception as e:
+            print(f"\nA connection error occurred: {e}")
+            save_data()
 
 
 if __name__ == "__main__":

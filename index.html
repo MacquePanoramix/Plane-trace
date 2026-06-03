@@ -1,75 +1,291 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Enschede Live Flight Tracker</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <title>Enschede Live Flight Tracker | Pro Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; }
-        #map { width: 100%; height: 100%; }
-        /* 自訂彈出視窗樣式 */
-        .popup-info { font-size: 12px; line-height: 1.4; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19; color: #e2e8f0;
+        }
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        .glass-panel {
+            position: fixed; z-index: 1000;
+            background: rgba(20, 25, 35, 0.75);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 15px;
+        }
+
+        #legend { bottom: 30px; left: 30px; width: 220px; }
+        .legend-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #fff; }
+        .gradient-bar { height: 12px; border-radius: 6px; background: linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB); margin-bottom: 6px; }
+        .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #a0aec0; }
+
+        /* 新版控制面板 - 支援展開收起 */
+        #controls { top: 30px; right: 30px; width: 260px; max-height: 80vh; overflow-y: auto; }
+        .control-header { font-weight: 700; font-size: 16px; margin-bottom: 10px; color: #fff; }
+        
+        /* 原生手風琴樣式 */
+        details { margin-bottom: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        summary { padding: 10px 15px; font-weight: 500; font-size: 13px; cursor: pointer; user-select: none; color: #B8A7E8; }
+        summary:hover { background: rgba(255,255,255,0.05); }
+        .details-content { padding: 10px 15px; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px; }
+
+        .filter-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e2e8f0; }
+        .filter-label input[type="checkbox"], .filter-label input[type="radio"] { accent-color: #6F8DEB; width: 14px; height: 14px; cursor: pointer; }
+
+        /* 撥動開關 (Toggle Switch) */
+        .switch-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); font-size: 13px; font-weight: 500; color: #fff;}
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4a5568; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #6F8DEB; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Popup 美化 */
+        .leaflet-popup-content-wrapper { background: rgba(20, 25, 35, 0.95); backdrop-filter: blur(10px); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
+        .leaflet-popup-tip { background: rgba(20, 25, 35, 0.95); border: 1px solid rgba(255,255,255,0.15); }
+        .leaflet-popup-content { margin: 12px; font-family: 'Inter', sans-serif; }
+        .popup-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .popup-header img.company-logo { width: 36px; height: 36px; object-fit: contain; background: #fff; border-radius: 6px; padding: 2px; }
+        .popup-title { font-size: 16px; font-weight: 700; margin: 0; color: #fff; }
+        .popup-subtitle { font-size: 11px; color: #a0aec0; margin: 2px 0 0 0; }
+        .popup-body { font-size: 13px; line-height: 1.6; }
+        .popup-body span.highlight { color: #6F8DEB; font-weight: 700; }
+        .popup-footer { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 12px; color: #F6A97A; }
+
+        .plane-icon svg { filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); transition: transform 0.3s linear; }
     </style>
 </head>
 <body>
 
 <div id="map"></div>
 
-<div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 12px;">
-    <b>Relative Altitude</b><br>
-    <div style="height: 10px; width: 150px; background: linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB); margin: 5px 0;"></div>
-    <div style="display: flex; justify-content: space-between;"><span>Low</span><span>High</span></div>
+<div id="controls" class="glass-panel">
+    <div class="control-header">🎛️ Dashboard</div>
+
+    <div class="switch-wrapper">
+        <span>🔴 Live Planes Only</span>
+        <label class="switch">
+            <input type="checkbox" id="live-toggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <details open>
+        <summary>🕒 Time Frame</summary>
+        <div class="details-content">
+            <label class="filter-label"><input type="radio" name="timeframe" value="all" checked> All Time</label>
+            <label class="filter-label"><input type="radio" name="timeframe" value="24h"> Past 24 Hours</label>
+            <label class="filter-label"><input type="radio" name="timeframe" value="1h"> Past 1 Hour</label>
+        </div>
+    </details>
+
+    <details open>
+        <summary>✈️ Airlines</summary>
+        <div class="details-content" id="airline-filters">
+            <div style="color: #a0aec0;">Loading...</div>
+        </div>
+    </details>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+<div id="legend" class="glass-panel">
+    <div class="legend-title">Relative Altitude</div>
+    <div class="gradient-bar"></div>
+    <div class="legend-labels"><span>GND / 1.8k ft</span><span>Cruising / 38k ft</span></div>
+</div>
+
 <script>
-    // 初始化地圖 (以恩斯赫德為中心)
-    var map = L.map('map').setView([52.22, 6.89], 10);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
+    const map = L.map('map').setView([52.22, 6.89], 9);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19, attribution: '© OpenStreetMap & CartoDB'
     }).addTo(map);
 
-    // 取得高度顏色 (簡單的線性映射)
+    let allPlanesData = {};
+    let mapLayers = []; 
+    let activeAirlines = new Set();
+    let globalMaxTimestampMs = 0; // 用來計算 "Now"
+
     function getColor(alt) {
         if (!alt) return '#888';
         return alt < 10000 ? '#F6A97A' : (alt < 25000 ? '#B8A7E8' : '#6F8DEB');
     }
 
-    // 讀取我們的 trail_points.json
-    fetch('trail_points.json')
-        .then(response => response.json())
-        .then(data => {
-            // 將點數據按 Aircraft 分組
-            let planes = {};
-            data.forEach(p => {
-                if (!planes[p.address]) planes[p.address] = [];
-                planes[p.address].push(p);
-            });
+    function getCountryEmoji(countryName) {
+        if (!countryName || countryName === "Unknown") return "✈️";
+        const isoMap = { "Netherlands": "🇳🇱", "Germany": "🇩🇪", "France": "🇫🇷", "United Kingdom": "🇬🇧", "Ireland": "🇮🇪", "United States": "🇺🇸", "Denmark": "🇩🇰", "Sweden": "🇸🇪", "China": "🇨🇳", "Japan": "🇯🇵" };
+        return isoMap[countryName] || "🏳️";
+    }
 
-            // 畫線
-            for (let addr in planes) {
-                let points = planes[addr];
-                for (let i = 0; i < points.length - 1; i++) {
-                    L.polyline([
-                        [points[i].latitude, points[i].longitude],
-                        [points[i+1].latitude, points[i+1].longitude]
-                    ], {
-                        color: getColor(points[i].altitude),
-                        weight: 4,
-                        opacity: 0.7
-                    }).addTo(map).bindPopup(`
-                        <div class="popup-info">
-                            <b>Callsign:</b> ${points[i].callsign || 'Unknown'}<br>
-                            <b>Company:</b> ${points[i].company || 'N/A'}<br>
-                            <b>Altitude:</b> ${points[i].altitude || 0} ft<br>
-                            <b>Speed:</b> ${points[i].speed || 0} kt<br>
-                            <b>Time:</b> ${points[i].timestamp}
-                        </div>
-                    `);
-                }
-            }
+    function getPlaneScale(altitude) {
+        if (!altitude) return 1;
+        if (altitude > 30000) return 1.3; 
+        if (altitude < 10000) return 0.8; 
+        return 1.0;
+    }
+
+    function createPlaneIcon(heading, scale) {
+        const angle = (heading || 0); 
+        const size = 24 * scale;
+        const svgHTML = `
+            <svg viewBox="0 0 24 24" style="transform: rotate(${angle}deg); width: ${size}px; height: ${size}px;">
+                <path fill="#ffffff" stroke="#000" stroke-width="0.5" d="M21,16v-2l-8-5V3.5C13,2.67,12.33,2,11.5,2S10,2.67,10,3.5V9l-8,5v2l8-2.5V19l-2,1.5V22l3.5-1l3.5,1v-1.5L13,19v-5.5L21,16z"/>
+            </svg>`;
+        return L.divIcon({ html: svgHTML, className: 'plane-icon', iconSize: [size, size], iconAnchor: [size/2, size/2], popupAnchor: [0, -size/2] });
+    }
+
+    // 初始化濾鏡事件綁定
+    document.getElementById('live-toggle').addEventListener('change', renderMap);
+    document.querySelectorAll('input[name="timeframe"]').forEach(r => r.addEventListener('change', renderMap));
+
+    function buildFilters(planesMap) {
+        const airlineSet = new Set();
+        for (let addr in planesMap) {
+            let pts = planesMap[addr];
+            let comp = pts[pts.length-1].company;
+            if (comp && comp !== "Unknown" && comp !== "Unknown Airline") airlineSet.add(comp);
+        }
+        
+        const filterContainer = document.getElementById('airline-filters');
+        filterContainer.innerHTML = ''; 
+
+        airlineSet.forEach(airline => {
+            activeAirlines.add(airline);
+            const label = document.createElement('label');
+            label.className = 'filter-label';
+            label.innerHTML = `<input type="checkbox" value="${airline}" checked> ${airline}`;
+            label.querySelector('input').addEventListener('change', (e) => {
+                if (e.target.checked) activeAirlines.add(airline);
+                else activeAirlines.delete(airline);
+                renderMap();
+            });
+            filterContainer.appendChild(label);
         });
+
+        activeAirlines.add("Unknown");
+        const unknownLabel = document.createElement('label');
+        unknownLabel.className = 'filter-label';
+        unknownLabel.innerHTML = `<input type="checkbox" value="Unknown" checked> Other / Unknown`;
+        unknownLabel.querySelector('input').addEventListener('change', (e) => {
+            if (e.target.checked) activeAirlines.add("Unknown");
+            else activeAirlines.delete("Unknown");
+            renderMap();
+        });
+        filterContainer.appendChild(unknownLabel);
+    }
+
+    function renderMap() {
+        mapLayers.forEach(layer => map.removeLayer(layer));
+        mapLayers = [];
+
+        // 讀取 UI 狀態
+        const isLiveOnly = document.getElementById('live-toggle').checked;
+        const timeFrame = document.querySelector('input[name="timeframe"]:checked').value;
+        
+        let cutoffTimeMs = 0;
+        if (timeFrame === "24h") cutoffTimeMs = globalMaxTimestampMs - (24 * 60 * 60 * 1000);
+        else if (timeFrame === "1h") cutoffTimeMs = globalMaxTimestampMs - (60 * 60 * 1000);
+
+        for (let addr in allPlanesData) {
+            let points = allPlanesData[addr];
+            let lastPoint = points[points.length - 1];
+            let lastPointTimeMs = new Date(lastPoint.timestamp).getTime();
+
+            // 1. Live Filter Check (5 minutes threshold)
+            if (isLiveOnly && (globalMaxTimestampMs - lastPointTimeMs > 5 * 60 * 1000)) continue;
+
+            // 2. Airline Filter Check
+            let comp = lastPoint.company;
+            let filterKey = (comp && comp !== "Unknown Airline") ? comp : "Unknown";
+            if (!activeAirlines.has(filterKey)) continue;
+
+            // 3. Time Frame Filter - 只保留時間內的點
+            let validPoints = points.filter(p => new Date(p.timestamp).getTime() >= cutoffTimeMs);
+            if (validPoints.length === 0) continue;
+
+            // 畫線 (只畫符合時間範圍的線)
+            for (let i = 0; i < validPoints.length - 1; i++) {
+                let line = L.polyline([
+                    [validPoints[i].latitude, validPoints[i].longitude],
+                    [validPoints[i+1].latitude, validPoints[i+1].longitude]
+                ], { color: getColor(validPoints[i].altitude), weight: 3, opacity: 0.6 }).addTo(map);
+                mapLayers.push(line);
+            }
+
+            // Popup 資訊
+            let domainQuery = comp && comp !== "Unknown Airline" ? comp.toLowerCase().replace(/\s+/g, '') + '.com' : '';
+            let logoUrl = domainQuery ? `https://logo.clearbit.com/${domainQuery}` : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
+            // Placeholder for classmates
+            let foodRecommendation = "Awaiting classmates database... 🍲";
+
+            let scale = getPlaneScale(lastPoint.altitude);
+            let marker = L.marker([lastPoint.latitude, lastPoint.longitude], {
+                icon: createPlaneIcon(lastPoint.heading, scale)
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <div class="popup-header">
+                    <img src="${logoUrl}" class="company-logo" onerror="this.style.display='none'">
+                    <div>
+                        <h3 class="popup-title">${lastPoint.callsign || addr.toUpperCase()}</h3>
+                        <p class="popup-subtitle">${comp || 'Unknown Airline'} ${getCountryEmoji(lastPoint.country)}</p>
+                    </div>
+                </div>
+                <div class="popup-body">
+                    Altitude: <span class="highlight">${lastPoint.altitude || 0} ft</span><br>
+                    Speed: <span class="highlight">${lastPoint.speed || 0} kts</span><br>
+                    Heading: <span class="highlight">${lastPoint.heading || 0}°</span><br>
+                    Last seen: <span class="highlight">${new Date(lastPoint.timestamp).toLocaleTimeString()}</span><br>
+                    <div class="popup-footer">
+                        <b>🍽️ Classmate DB Slot:</b><br>${foodRecommendation}
+                    </div>
+                </div>
+            `);
+            mapLayers.push(marker);
+        }
+    }
+
+    function loadDataAndRender(isFirstLoad = false) {
+        fetch('trail_points.json')
+            .then(response => response.json())
+            .then(data => {
+                let newPlanesData = {};
+                globalMaxTimestampMs = 0;
+
+                data.forEach(p => {
+                    if (!newPlanesData[p.address]) newPlanesData[p.address] = [];
+                    newPlanesData[p.address].push(p);
+                    
+                    // 找出最新的時間點，作為 Live 和 TimeFrame 計算的基準
+                    let timeMs = new Date(p.timestamp).getTime();
+                    if (timeMs > globalMaxTimestampMs) globalMaxTimestampMs = timeMs;
+                });
+                
+                allPlanesData = newPlanesData;
+                
+                if (isFirstLoad) buildFilters(allPlanesData);
+                renderMap();
+            })
+            .catch(err => console.error("Could not load trail data:", err));
+    }
+
+    // 初次載入並建立濾鏡
+    loadDataAndRender(true);
+
+    // 每 15 秒更新一次資料，但不重建物件(保留勾選狀態)
+    setInterval(() => loadDataAndRender(false), 15000);
+
 </script>
 </body>
 </html>
