@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <title>Enschede Live Flight Tracker | Pro Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -16,6 +15,7 @@
         }
         #map { width: 100%; height: 100%; z-index: 1; }
 
+        /* Glassmorphism Panel */
         .glass-panel {
             position: fixed; z-index: 1000;
             background: rgba(20, 25, 35, 0.75);
@@ -30,11 +30,11 @@
         .gradient-bar { height: 12px; border-radius: 6px; background: linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB); margin-bottom: 6px; }
         .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #a0aec0; }
 
-        /* 新版控制面板 - 支援展開收起 */
+        /* Control Panel - Collapsible */
         #controls { top: 30px; right: 30px; width: 260px; max-height: 80vh; overflow-y: auto; }
         .control-header { font-weight: 700; font-size: 16px; margin-bottom: 10px; color: #fff; }
         
-        /* 原生手風琴樣式 */
+        /* Native accordion style */
         details { margin-bottom: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
         summary { padding: 10px 15px; font-weight: 500; font-size: 13px; cursor: pointer; user-select: none; color: #B8A7E8; }
         summary:hover { background: rgba(255,255,255,0.05); }
@@ -43,7 +43,7 @@
         .filter-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e2e8f0; }
         .filter-label input[type="checkbox"], .filter-label input[type="radio"] { accent-color: #6F8DEB; width: 14px; height: 14px; cursor: pointer; }
 
-        /* 撥動開關 (Toggle Switch) */
+        /* Toggle Switch */
         .switch-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); font-size: 13px; font-weight: 500; color: #fff;}
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -52,7 +52,7 @@
         input:checked + .slider { background-color: #6F8DEB; }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Popup 美化 */
+        /* Popup Beautification */
         .leaflet-popup-content-wrapper { background: rgba(20, 25, 35, 0.95); backdrop-filter: blur(10px); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
         .leaflet-popup-tip { background: rgba(20, 25, 35, 0.95); border: 1px solid rgba(255,255,255,0.15); }
         .leaflet-popup-content { margin: 12px; font-family: 'Inter', sans-serif; }
@@ -62,7 +62,7 @@
         .popup-subtitle { font-size: 11px; color: #a0aec0; margin: 2px 0 0 0; }
         .popup-body { font-size: 13px; line-height: 1.6; }
         .popup-body span.highlight { color: #6F8DEB; font-weight: 700; }
-        .popup-footer { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 12px; color: #F6A97A; }
+        .popup-footer { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 12px; color: #F6A97A; max-width: 250px;}
 
         .plane-icon svg { filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); transition: transform 0.3s linear; }
     </style>
@@ -108,6 +108,7 @@
     </div>
 </div>
 
+<script src="food_data.js"></script>
 <script>
     const map = L.map('map').setView([52.22, 6.89], 9);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -117,7 +118,7 @@
     let allPlanesData = {};
     let mapLayers = []; 
     let activeAirlines = new Set();
-    let globalMaxTimestampMs = 0; // 用來計算 "Now"
+    let globalMaxTimestampMs = 0; // Used to calculate "Now"
 
     function blendChannel(startValue, endValue, amount) {
         return Math.round(startValue + (endValue - startValue) * amount);
@@ -127,24 +128,14 @@
         const red = blendChannel(startColor[0], endColor[0], amount);
         const green = blendChannel(startColor[1], endColor[1], amount);
         const blue = blendChannel(startColor[2], endColor[2], amount);
-
         return `rgb(${red}, ${green}, ${blue})`;
     }
 
     function getRelativeAltitudeColor(altitude, minAltitude, maxAltitude) {
-        if (altitude === null || altitude === undefined || altitude === "") {
-            return '#888';
-        }
-
+        if (altitude === null || altitude === undefined || altitude === "") return '#888';
         const numericAltitude = Number(altitude);
-
-        if (!Number.isFinite(numericAltitude)) {
-            return '#888';
-        }
-
-        if (maxAltitude === minAltitude) {
-            return '#B8A7E8';
-        }
+        if (!Number.isFinite(numericAltitude)) return '#888';
+        if (maxAltitude === minAltitude) return '#B8A7E8';
 
         let altitudeRatio = (numericAltitude - minAltitude) / (maxAltitude - minAltitude);
         altitudeRatio = Math.max(0, Math.min(1, altitudeRatio));
@@ -157,7 +148,6 @@
             const localRatio = altitudeRatio / 0.5;
             return blendColor(peach, lavender, localRatio);
         }
-
         const localRatio = (altitudeRatio - 0.5) / 0.5;
         return blendColor(lavender, moonBlue, localRatio);
     }
@@ -165,7 +155,6 @@
     function updateAltitudeLegend(minAltitude, maxAltitude) {
         const minLabel = document.getElementById('legend-min-altitude');
         const maxLabel = document.getElementById('legend-max-altitude');
-
         if (!minLabel || !maxLabel) return;
 
         if (!Number.isFinite(minAltitude) || !Number.isFinite(maxAltitude)) {
@@ -201,7 +190,7 @@
         return L.divIcon({ html: svgHTML, className: 'plane-icon', iconSize: [size, size], iconAnchor: [size/2, size/2], popupAnchor: [0, -size/2] });
     }
 
-    // 初始化濾鏡事件綁定
+    // Initialize filter event bindings
     document.getElementById('live-toggle').addEventListener('change', renderMap);
     document.querySelectorAll('input[name="timeframe"]').forEach(r => r.addEventListener('change', renderMap));
 
@@ -245,7 +234,7 @@
         mapLayers.forEach(layer => map.removeLayer(layer));
         mapLayers = [];
 
-        // 讀取 UI 狀態
+        // Read UI state
         const isLiveOnly = document.getElementById('live-toggle').checked;
         const timeFrame = document.querySelector('input[name="timeframe"]:checked').value;
         
@@ -271,10 +260,7 @@
             validPoints.forEach(point => {
                 if (point.altitude !== null && point.altitude !== undefined && point.altitude !== "") {
                     const numericAltitude = Number(point.altitude);
-
-                    if (Number.isFinite(numericAltitude)) {
-                        visibleAltitudes.push(numericAltitude);
-                    }
+                    if (Number.isFinite(numericAltitude)) visibleAltitudes.push(numericAltitude);
                 }
             });
         }
@@ -297,11 +283,11 @@
             let filterKey = (comp && comp !== "Unknown Airline") ? comp : "Unknown";
             if (!activeAirlines.has(filterKey)) continue;
 
-            // 3. Time Frame Filter - 只保留時間內的點
+            // 3. Time Frame Filter - Keep only points within the time frame
             let validPoints = points.filter(p => new Date(p.timestamp).getTime() >= cutoffTimeMs);
             if (validPoints.length === 0) continue;
 
-            // 畫線 (只畫符合時間範圍的線)
+            // Draw lines
             for (let i = 0; i < validPoints.length - 1; i++) {
                 let line = L.polyline([
                     [validPoints[i].latitude, validPoints[i].longitude],
@@ -314,12 +300,15 @@
                 mapLayers.push(line);
             }
 
-            // Popup 資訊
+            // Popup Info & Logo
             let domainQuery = comp && comp !== "Unknown Airline" ? comp.toLowerCase().replace(/\s+/g, '') + '.com' : '';
             let logoUrl = domainQuery ? `https://logo.clearbit.com/${domainQuery}` : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
-            // Placeholder for classmates
-            let foodRecommendation = "Awaiting classmates database... 🍲";
+            // Food Info Integration
+            let foodRecommendation = "Check the onboard menu! ✈️";
+            if (typeof AIRLINE_FOOD !== 'undefined' && AIRLINE_FOOD[comp]) {
+                foodRecommendation = AIRLINE_FOOD[comp];
+            }
 
             let scale = getPlaneScale(lastPoint.altitude);
             let marker = L.marker([lastPoint.latitude, lastPoint.longitude], {
@@ -340,7 +329,7 @@
                     Heading: <span class="highlight">${lastPoint.heading || 0}°</span><br>
                     Last seen: <span class="highlight">${new Date(lastPoint.timestamp).toLocaleTimeString()}</span><br>
                     <div class="popup-footer">
-                        <b>🍽️ Classmate DB Slot:</b><br>${foodRecommendation}
+                        <b>🍽️ In-Flight Dining:</b><br>${foodRecommendation}
                     </div>
                 </div>
             `);
@@ -359,7 +348,7 @@
                     if (!newPlanesData[p.address]) newPlanesData[p.address] = [];
                     newPlanesData[p.address].push(p);
                     
-                    // 找出最新的時間點，作為 Live 和 TimeFrame 計算的基準
+                    // Find the latest timestamp as the baseline for Live and TimeFrame calculations
                     let timeMs = new Date(p.timestamp).getTime();
                     if (timeMs > globalMaxTimestampMs) globalMaxTimestampMs = timeMs;
                 });
@@ -372,10 +361,10 @@
             .catch(err => console.error("Could not load trail data:", err));
     }
 
-    // 初次載入並建立濾鏡
+    // Initial load and build filters
     loadDataAndRender(true);
 
-    // 每 15 秒更新一次資料，但不重建物件(保留勾選狀態)
+    // Update data every 15 seconds without rebuilding objects (preserves checkbox state)
     setInterval(() => loadDataAndRender(false), 15000);
 
 </script>
