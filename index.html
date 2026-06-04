@@ -102,7 +102,10 @@
 <div id="legend" class="glass-panel">
     <div class="legend-title">Relative Altitude</div>
     <div class="gradient-bar"></div>
-    <div class="legend-labels"><span>GND / 1.8k ft</span><span>Cruising / 38k ft</span></div>
+    <div class="legend-labels">
+        <span id="legend-min-altitude">Low</span>
+        <span id="legend-max-altitude">High</span>
+    </div>
 </div>
 
 <script>
@@ -116,9 +119,63 @@
     let activeAirlines = new Set();
     let globalMaxTimestampMs = 0; // 用來計算 "Now"
 
-    function getColor(alt) {
-        if (!alt) return '#888';
-        return alt < 10000 ? '#F6A97A' : (alt < 25000 ? '#B8A7E8' : '#6F8DEB');
+    function blendChannel(startValue, endValue, amount) {
+        return Math.round(startValue + (endValue - startValue) * amount);
+    }
+
+    function blendColor(startColor, endColor, amount) {
+        const red = blendChannel(startColor[0], endColor[0], amount);
+        const green = blendChannel(startColor[1], endColor[1], amount);
+        const blue = blendChannel(startColor[2], endColor[2], amount);
+
+        return `rgb(${red}, ${green}, ${blue})`;
+    }
+
+    function getRelativeAltitudeColor(altitude, minAltitude, maxAltitude) {
+        if (altitude === null || altitude === undefined || altitude === "") {
+            return '#888';
+        }
+
+        const numericAltitude = Number(altitude);
+
+        if (!Number.isFinite(numericAltitude)) {
+            return '#888';
+        }
+
+        if (maxAltitude === minAltitude) {
+            return '#B8A7E8';
+        }
+
+        let altitudeRatio = (numericAltitude - minAltitude) / (maxAltitude - minAltitude);
+        altitudeRatio = Math.max(0, Math.min(1, altitudeRatio));
+
+        const peach = [246, 169, 122];
+        const lavender = [184, 167, 232];
+        const moonBlue = [111, 141, 235];
+
+        if (altitudeRatio < 0.5) {
+            const localRatio = altitudeRatio / 0.5;
+            return blendColor(peach, lavender, localRatio);
+        }
+
+        const localRatio = (altitudeRatio - 0.5) / 0.5;
+        return blendColor(lavender, moonBlue, localRatio);
+    }
+
+    function updateAltitudeLegend(minAltitude, maxAltitude) {
+        const minLabel = document.getElementById('legend-min-altitude');
+        const maxLabel = document.getElementById('legend-max-altitude');
+
+        if (!minLabel || !maxLabel) return;
+
+        if (!Number.isFinite(minAltitude) || !Number.isFinite(maxAltitude)) {
+            minLabel.textContent = 'Low';
+            maxLabel.textContent = 'High';
+            return;
+        }
+
+        minLabel.textContent = `${Math.round(minAltitude).toLocaleString()} ft`;
+        maxLabel.textContent = `${Math.round(maxAltitude).toLocaleString()} ft`;
     }
 
     function getCountryEmoji(countryName) {
@@ -196,6 +253,37 @@
         if (timeFrame === "24h") cutoffTimeMs = globalMaxTimestampMs - (24 * 60 * 60 * 1000);
         else if (timeFrame === "1h") cutoffTimeMs = globalMaxTimestampMs - (60 * 60 * 1000);
 
+        let visibleAltitudes = [];
+
+        for (let addr in allPlanesData) {
+            let points = allPlanesData[addr];
+            let lastPoint = points[points.length - 1];
+            let lastPointTimeMs = new Date(lastPoint.timestamp).getTime();
+
+            if (isLiveOnly && (globalMaxTimestampMs - lastPointTimeMs > 5 * 60 * 1000)) continue;
+
+            let comp = lastPoint.company;
+            let filterKey = (comp && comp !== "Unknown Airline") ? comp : "Unknown";
+            if (!activeAirlines.has(filterKey)) continue;
+
+            let validPoints = points.filter(p => new Date(p.timestamp).getTime() >= cutoffTimeMs);
+
+            validPoints.forEach(point => {
+                if (point.altitude !== null && point.altitude !== undefined && point.altitude !== "") {
+                    const numericAltitude = Number(point.altitude);
+
+                    if (Number.isFinite(numericAltitude)) {
+                        visibleAltitudes.push(numericAltitude);
+                    }
+                }
+            });
+        }
+
+        const minVisibleAltitude = visibleAltitudes.length > 0 ? Math.min(...visibleAltitudes) : 0;
+        const maxVisibleAltitude = visibleAltitudes.length > 0 ? Math.max(...visibleAltitudes) : 0;
+
+        updateAltitudeLegend(minVisibleAltitude, maxVisibleAltitude);
+
         for (let addr in allPlanesData) {
             let points = allPlanesData[addr];
             let lastPoint = points[points.length - 1];
@@ -218,7 +306,11 @@
                 let line = L.polyline([
                     [validPoints[i].latitude, validPoints[i].longitude],
                     [validPoints[i+1].latitude, validPoints[i+1].longitude]
-                ], { color: getColor(validPoints[i].altitude), weight: 3, opacity: 0.6 }).addTo(map);
+                ], { color: getRelativeAltitudeColor(
+                    validPoints[i + 1].altitude,
+                    minVisibleAltitude,
+                    maxVisibleAltitude
+                ), weight: 3, opacity: 0.6 }).addTo(map);
                 mapLayers.push(line);
             }
 
