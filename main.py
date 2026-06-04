@@ -46,7 +46,7 @@ plane_memory = {}       # Stores live updates from the local websocket
 plane_cache = {}        # Secret weapon: Caches API results to protect rate limits
 seen_addresses = set()  # Keeps track of which planes we have already printed
 trail_points = []
-failed_attempts = {}    # used to note down unknown planes, and last check time
+failed_attempts = {}    # Used to note down unknown planes, and last check time
 
 if os.path.exists("trail_points.json"):
     try:
@@ -64,9 +64,6 @@ if os.path.exists("trail_points.json"):
 # ==========================================
 # 3. Processor Layer: OpenSky API Enrichment
 # ==========================================
-# ==========================================
-# 3. Processor Layer: OpenSky API Enrichment
-# ==========================================
 def get_enriched_data(icao24):
     icao_lower = str(icao24).lower()
 
@@ -76,10 +73,10 @@ def get_enriched_data(icao24):
     if icao_lower in failed_attempts:
         time_since_last_try = time.time() - failed_attempts[icao_lower]
         if time_since_last_try < 300:
-            # not 5 mins yet, don't check again through API
+            # Less than 5 minutes have passed, don't query the API again to avoid rate limits
             return {"callsign": "Unknown", "company": "Unknown", "country": "Unknown"}
         else:
-            print(f"5 Mins past, check {icao_lower} again！")
+            print(f"5 minutes have passed, querying {icao_lower} again!")
 
     print(f"Fetching details for {icao_lower} from OpenSky API...")
     try:
@@ -88,7 +85,7 @@ def get_enriched_data(icao24):
             plane = s.states[0]
             callsign = plane.callsign.strip() if plane.callsign else "N/A"
             
-            # Extract the first 3 characters to find the airline company
+            # Extract the first 3 characters to identify the airline company
             prefix = callsign[:3].upper()
             company = AIRLINE_MAP.get(prefix, "Unknown Airline")
             
@@ -105,20 +102,21 @@ def get_enriched_data(icao24):
     except Exception as e:
         print(f"Error while searching for {icao_lower}: {e}")
 
-    # --- 修復的地方在這裡！ ---
-    # 如果查不到飛機或是發生錯誤，標記為失敗並回傳安全的預設值，千萬不要去挖 cache！
+    # --- THE FIX IS HERE! ---
+    # If the plane cannot be found or an error occurs, mark it as failed and return safe default values.
+    # Do NOT attempt to read from the cache to prevent KeyError crashes!
     failed_attempts[icao_lower] = time.time()
     return {"callsign": "Unknown", "company": "Unknown", "country": "Unknown"}
 
 # ==========================================
-# 4. Message Handler Layer (UPDATED)
+# 4. Message Handler Layer
 # ==========================================
 def handle_message(msg):
     address = msg.get("address")
     
     # Ignore empty messages or heartbeats
     if address is None:
-        return False  # <-- NEW: Tell the main loop no point was added
+        return False  # Tell the main loop no point was added
 
     if address not in plane_memory:
         plane_memory[address] = {
@@ -161,29 +159,41 @@ def handle_message(msg):
             print(f"Plane memory now has a drawable plane: {address} ({plane_memory[address]['company']})")
             seen_addresses.add(address)
             
-        return True  # <-- NEW: Successfully added a valid GPS point!
+        return True  # Successfully added a valid GPS point!
         
-    return False # <-- NEW: Plane exists but no GPS data yet
+    return False # Plane exists but no GPS data yet
 
 # ==========================================
 # 5. Storage Layer
 # ==========================================
 def save_data():
-    """Saves our collected trail points to the JSON file for the website to read."""
-    with open("trail_points.json", "w") as f:
-        json.dump(trail_points, f, indent=2)
-    print(f"Saved {len(trail_points)} trail points to trail_points.json!")
+    """Saves collected trail points safely and prevents file bloating."""
+    global trail_points
+    
+    # 1. Auto-Cleanup: Keep only the latest 10,000 points to prevent infinite file growth and web UI lag.
+    MAX_POINTS = 10000
+    if len(trail_points) > MAX_POINTS:
+        trail_points = trail_points[-MAX_POINTS:]
+
+    # 2. Atomic Save: Write to a temporary file first, then overwrite the original.
+    # This prevents the JSON file from being wiped clean (0 bytes) if the script crashes midway.
+    try:
+        with open("trail_points_temp.json", "w") as f:
+            json.dump(trail_points, f, indent=2)
+        
+        # Safely replace the file (works across Windows/Linux)
+        os.replace("trail_points_temp.json", "trail_points.json")
+        print(f"Saved safely! Currently holding {len(trail_points)} points on the map.")
+    except Exception as e:
+        print(f"Failed to save data safely: {e}")
 
 # ==========================================
 # NEW: Startup Data Recovery Scan
 # ==========================================
-# ==========================================
-# NEW: Startup Data Recovery Scan (UPGRADED)
-# ==========================================
 def run_startup_scan():
     """
     Scans the loaded historical trails for missing data using a two-pass system:
-    1. Local Dictionary Check (Fast, saves API limits)
+    1. Local Dictionary Check (Fast, saves API rate limits)
     2. API Historical Query (For completely missing callsigns)
     """
     print("\n--- Starting Pre-Flight Scan: Checking for missing airline data ---")
@@ -192,23 +202,23 @@ def run_startup_scan():
 
     # Pass 1: Fast Local Fix & Identify missing callsigns
     for point in trail_points:
-        # 使用 .get() 抓取，如果舊資料沒有這個欄位，就會是 None
+        # Use .get() to avoid KeyError if old data lacks these fields
         callsign = point.get("callsign")
         company = point.get("company")
 
-        # 情況 A：如果連呼號都沒有 (包含舊資料的 None)，標記起來準備問 API
+        # Scenario A: If there is no callsign at all (including None from old data), queue it for the API query.
         if callsign in [None, "N/A", "Unknown", ""]:
             unknown_addresses.add(point["address"])
         
-        # 情況 B：如果有呼號，但沒有公司名稱 (例如剛把 ELY 加進字典)
-        # 直接使用本地的 AIRLINE_MAP 進行光速修復！
+        # Scenario B: If there is a callsign, but no company name (e.g., recently added 'ELY' to dictionary).
+        # Use the local AIRLINE_MAP for a lightning-fast fix!
         elif company in [None, "Unknown", "Unknown Airline"]:
             prefix = callsign[:3].upper()
             if prefix in AIRLINE_MAP:
                 point["company"] = AIRLINE_MAP[prefix]
                 local_fixes += 1
 
-    # 如果有本地修復成功，馬上存檔
+    # Save immediately if local fixes were applied
     if local_fixes > 0:
         print(f"Locally fixed {local_fixes} points using the updated AIRLINE_MAP!")
         save_data()
@@ -241,14 +251,13 @@ def run_startup_scan():
     else:
         print("--- Scan Complete: Could not recover any new info from API at this time. ---\n")    
 
-
 def test_historical_callsign(icao24):
     """
-    使用標準 REST API 查詢，包含偽裝 Header 以防被擋。
+    Uses the standard REST API to query historical data, including User-Agent headers to avoid blocks.
     """
     icao_lower = str(icao24).lower()
     
-    # 計算時間 (48 小時範圍，這是 OpenSky 的限制)
+    # Calculate timeframe (Restrict to recent hours to avoid OpenSky partition limits)
     end_time = int(time.time())
     begin_time = end_time - (12 * 60 * 60)
     
@@ -259,7 +268,7 @@ def test_historical_callsign(icao24):
         "end": end_time
     }
     
-    # 偽裝成普通瀏覽器，避免 OpenSky 伺服器對爬蟲不友善
+    # Masquerade as a standard browser to prevent the OpenSky server from aggressively blocking the script.
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
@@ -269,11 +278,11 @@ def test_historical_callsign(icao24):
     try:
         response = requests.get(url, params=params, headers=headers)
         
-        # 顯示詳細回傳訊息，這對除錯很有幫助！
+        # Displaying detailed responses is highly beneficial for debugging API rate limits/errors.
         if response.status_code == 200:
             flights = response.json()
             if flights and len(flights) > 0:
-                # 遍歷尋找第一個有效的呼號
+                # Iterate to find the first valid callsign
                 for f in flights:
                     if f.get("callsign"):
                         cs = f["callsign"].strip()
@@ -283,7 +292,7 @@ def test_historical_callsign(icao24):
                         return {"callsign": cs, "company": company}
             print(f"  -> No flight records found for {icao24} in the last 48 hours.")
         else:
-            print(f"  -> API 請求失敗 (狀態碼 {response.status_code}): {response.text}")
+            print(f"  -> API Request Failed (Status Code {response.status_code}): {response.text}")
             
     except Exception as e:
         print(f"  -> Error occurred: {e}")
@@ -291,11 +300,11 @@ def test_historical_callsign(icao24):
     return {"callsign": "N/A", "company": "Unknown"}
 
 # ==========================================
-# 6. Main Application Loop (UPDATED)
+# 6. Main Application Loop
 # ==========================================
 def main():
     print("Starting Main Loop. Listening for ADS-B data...")
-    valid_points_count = 0  # <-- NEW: Only count actual mapped points!
+    valid_points_count = 0  
     
     ws_url = "ws://192.87.172.82:1338"
 
@@ -325,14 +334,16 @@ def main():
         except KeyboardInterrupt:
             print("\nProcess interrupted by user. Shutting down safely...")
             save_data()
+            break  # Break the infinite loop on Ctrl+C to cleanly exit
         except Exception as e:
             print(f"\nA connection error occurred: {e}")
             save_data()
-
+            print("Retrying connection in 5 seconds...")
+            time.sleep(5)  # Pause to allow the server/network to recover before reconnecting
 
 if __name__ == "__main__":
-    print("--- test historical data begin ---")
-    test_historical_callsign("4081A9")
-    print("--- test historical data complete ---\n")
+    # print("--- test historical data begin ---")
+    # test_historical_callsign("4081A9")
+    # print("--- test historical data complete ---\n")
 
     main()
