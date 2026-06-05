@@ -25,9 +25,9 @@
             padding: 15px;
         }
 
-        #legend { bottom: 30px; left: 30px; width: 220px; }
+        #legend { bottom: 30px; left: 30px; width: 220px; transition: all 0.3s ease; }
         .legend-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #fff; }
-        .gradient-bar { height: 12px; border-radius: 6px; background: linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB); margin-bottom: 6px; }
+        .gradient-bar { height: 12px; border-radius: 6px; background: linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB); margin-bottom: 6px; transition: background 0.5s ease;}
         .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #a0aec0; }
 
         /* Control Panel - Collapsible */
@@ -83,6 +83,14 @@
     </div>
 
     <details open>
+        <summary>🎨 Trail Color Mode</summary>
+        <div class="details-content">
+            <label class="filter-label"><input type="radio" name="colormode" value="altitude" checked> By Altitude</label>
+            <label class="filter-label"><input type="radio" name="colormode" value="rssi"> By Signal (RSSI)</label>
+        </div>
+    </details>
+
+    <details open>
         <summary>🕒 Time Frame</summary>
         <div class="details-content">
             <label class="filter-label"><input type="radio" name="timeframe" value="all" checked> All Time</label>
@@ -100,11 +108,11 @@
 </div>
 
 <div id="legend" class="glass-panel">
-    <div class="legend-title">Relative Altitude</div>
-    <div class="gradient-bar"></div>
+    <div class="legend-title" id="legend-title-text">Relative Altitude</div>
+    <div class="gradient-bar" id="legend-gradient"></div>
     <div class="legend-labels">
-        <span id="legend-min-altitude">Low</span>
-        <span id="legend-max-altitude">High</span>
+        <span id="legend-min-val">Low</span>
+        <span id="legend-max-val">High</span>
     </div>
 </div>
 
@@ -118,7 +126,7 @@
     let allPlanesData = {};
     let mapLayers = []; 
     let activeAirlines = new Set();
-    let globalMaxTimestampMs = 0; // Used to calculate "Now"
+    let globalMaxTimestampMs = 0;
 
     function blendChannel(startValue, endValue, amount) {
         return Math.round(startValue + (endValue - startValue) * amount);
@@ -131,40 +139,66 @@
         return `rgb(${red}, ${green}, ${blue})`;
     }
 
+    // Existing Altitude Gradient (Peach -> Lavender -> Blue)
     function getRelativeAltitudeColor(altitude, minAltitude, maxAltitude) {
         if (altitude === null || altitude === undefined || altitude === "") return '#888';
         const numericAltitude = Number(altitude);
         if (!Number.isFinite(numericAltitude)) return '#888';
         if (maxAltitude === minAltitude) return '#B8A7E8';
 
-        let altitudeRatio = (numericAltitude - minAltitude) / (maxAltitude - minAltitude);
-        altitudeRatio = Math.max(0, Math.min(1, altitudeRatio));
+        let ratio = (numericAltitude - minAltitude) / (maxAltitude - minAltitude);
+        ratio = Math.max(0, Math.min(1, ratio));
 
         const peach = [246, 169, 122];
         const lavender = [184, 167, 232];
         const moonBlue = [111, 141, 235];
 
-        if (altitudeRatio < 0.5) {
-            const localRatio = altitudeRatio / 0.5;
-            return blendColor(peach, lavender, localRatio);
-        }
-        const localRatio = (altitudeRatio - 0.5) / 0.5;
-        return blendColor(lavender, moonBlue, localRatio);
+        if (ratio < 0.5) return blendColor(peach, lavender, ratio / 0.5);
+        return blendColor(lavender, moonBlue, (ratio - 0.5) / 0.5);
     }
 
-    function updateAltitudeLegend(minAltitude, maxAltitude) {
-        const minLabel = document.getElementById('legend-min-altitude');
-        const maxLabel = document.getElementById('legend-max-altitude');
-        if (!minLabel || !maxLabel) return;
+    // NEW: RSSI Gradient (Red -> Yellow -> Green)
+    function getRssiColor(rssi, minRssi, maxRssi) {
+        if (rssi === null || rssi === undefined || rssi === "") return '#888';
+        const numericRssi = Number(rssi);
+        if (!Number.isFinite(numericRssi)) return '#888';
+        if (maxRssi === minRssi) return '#eab308'; // Default yellow
 
-        if (!Number.isFinite(minAltitude) || !Number.isFinite(maxAltitude)) {
-            minLabel.textContent = 'Low';
-            maxLabel.textContent = 'High';
+        // Less negative is better signal (e.g. -40 is better than -200)
+        let ratio = (numericRssi - minRssi) / (maxRssi - minRssi);
+        ratio = Math.max(0, Math.min(1, ratio));
+
+        const red = [239, 68, 68];     // Bad Signal
+        const yellow = [234, 179, 8];  // Okay Signal
+        const green = [34, 197, 94];   // Good Signal
+
+        if (ratio < 0.5) return blendColor(red, yellow, ratio / 0.5);
+        return blendColor(yellow, green, (ratio - 0.5) / 0.5);
+    }
+
+    // Dynamic Legend Updater
+    function updateLegend(mode, minVal, maxVal) {
+        const title = document.getElementById('legend-title-text');
+        const bar = document.getElementById('legend-gradient');
+        const minLabel = document.getElementById('legend-min-val');
+        const maxLabel = document.getElementById('legend-max-val');
+
+        if (!Number.isFinite(minVal) || !Number.isFinite(maxVal)) {
+            minLabel.textContent = 'Low'; maxLabel.textContent = 'High';
             return;
         }
 
-        minLabel.textContent = `${Math.round(minAltitude).toLocaleString()} ft`;
-        maxLabel.textContent = `${Math.round(maxAltitude).toLocaleString()} ft`;
+        if (mode === 'altitude') {
+            title.textContent = 'Relative Altitude';
+            bar.style.background = 'linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB)';
+            minLabel.textContent = `${Math.round(minVal).toLocaleString()} ft`;
+            maxLabel.textContent = `${Math.round(maxVal).toLocaleString()} ft`;
+        } else {
+            title.textContent = 'Signal Strength (RSSI)';
+            bar.style.background = 'linear-gradient(to right, #ef4444, #eab308, #22c55e)';
+            minLabel.textContent = `${Math.round(minVal)} dBm`; // Lowest value (Red)
+            maxLabel.textContent = `${Math.round(maxVal)} dBm`; // Highest value (Green)
+        }
     }
 
     function getCountryEmoji(countryName) {
@@ -193,6 +227,7 @@
     // Initialize filter event bindings
     document.getElementById('live-toggle').addEventListener('change', renderMap);
     document.querySelectorAll('input[name="timeframe"]').forEach(r => r.addEventListener('change', renderMap));
+    document.querySelectorAll('input[name="colormode"]').forEach(r => r.addEventListener('change', renderMap));
 
     function buildFilters(planesMap) {
         const airlineSet = new Set();
@@ -234,16 +269,18 @@
         mapLayers.forEach(layer => map.removeLayer(layer));
         mapLayers = [];
 
-        // Read UI state
+        // Read UI states
         const isLiveOnly = document.getElementById('live-toggle').checked;
         const timeFrame = document.querySelector('input[name="timeframe"]:checked').value;
+        const colorMode = document.querySelector('input[name="colormode"]:checked').value;
         
         let cutoffTimeMs = 0;
         if (timeFrame === "24h") cutoffTimeMs = globalMaxTimestampMs - (24 * 60 * 60 * 1000);
         else if (timeFrame === "1h") cutoffTimeMs = globalMaxTimestampMs - (60 * 60 * 1000);
 
-        let visibleAltitudes = [];
+        let visibleValues = []; // Can be Altitude or RSSI depending on mode
 
+        // Step 1: Pre-calculate min/max for the chosen color mode
         for (let addr in allPlanesData) {
             let points = allPlanesData[addr];
             let lastPoint = points[points.length - 1];
@@ -258,45 +295,47 @@
             let validPoints = points.filter(p => new Date(p.timestamp).getTime() >= cutoffTimeMs);
 
             validPoints.forEach(point => {
-                if (point.altitude !== null && point.altitude !== undefined && point.altitude !== "") {
-                    const numericAltitude = Number(point.altitude);
-                    if (Number.isFinite(numericAltitude)) visibleAltitudes.push(numericAltitude);
+                let valToExtract = colorMode === 'altitude' ? point.altitude : point.rssi;
+                if (valToExtract !== null && valToExtract !== undefined && valToExtract !== "") {
+                    const num = Number(valToExtract);
+                    if (Number.isFinite(num)) visibleValues.push(num);
                 }
             });
         }
 
-        const minVisibleAltitude = visibleAltitudes.length > 0 ? Math.min(...visibleAltitudes) : 0;
-        const maxVisibleAltitude = visibleAltitudes.length > 0 ? Math.max(...visibleAltitudes) : 0;
+        const minVisibleVal = visibleValues.length > 0 ? Math.min(...visibleValues) : 0;
+        const maxVisibleVal = visibleValues.length > 0 ? Math.max(...visibleValues) : 0;
 
-        updateAltitudeLegend(minVisibleAltitude, maxVisibleAltitude);
+        updateLegend(colorMode, minVisibleVal, maxVisibleVal);
 
+        // Step 2: Draw the lines and markers
         for (let addr in allPlanesData) {
             let points = allPlanesData[addr];
             let lastPoint = points[points.length - 1];
             let lastPointTimeMs = new Date(lastPoint.timestamp).getTime();
 
-            // 1. Live Filter Check (5 minutes threshold)
             if (isLiveOnly && (globalMaxTimestampMs - lastPointTimeMs > 5 * 60 * 1000)) continue;
 
-            // 2. Airline Filter Check
             let comp = lastPoint.company;
             let filterKey = (comp && comp !== "Unknown Airline") ? comp : "Unknown";
             if (!activeAirlines.has(filterKey)) continue;
 
-            // 3. Time Frame Filter - Keep only points within the time frame
             let validPoints = points.filter(p => new Date(p.timestamp).getTime() >= cutoffTimeMs);
             if (validPoints.length === 0) continue;
 
-            // Draw lines
+            // Draw lines based on chosen color mode
             for (let i = 0; i < validPoints.length - 1; i++) {
+                let segmentColor;
+                if (colorMode === 'altitude') {
+                    segmentColor = getRelativeAltitudeColor(validPoints[i + 1].altitude, minVisibleVal, maxVisibleVal);
+                } else {
+                    segmentColor = getRssiColor(validPoints[i + 1].rssi, minVisibleVal, maxVisibleVal);
+                }
+
                 let line = L.polyline([
                     [validPoints[i].latitude, validPoints[i].longitude],
                     [validPoints[i+1].latitude, validPoints[i+1].longitude]
-                ], { color: getRelativeAltitudeColor(
-                    validPoints[i + 1].altitude,
-                    minVisibleAltitude,
-                    maxVisibleAltitude
-                ), weight: 3, opacity: 0.6 }).addTo(map);
+                ], { color: segmentColor, weight: 3, opacity: 0.6 }).addTo(map);
                 mapLayers.push(line);
             }
 
@@ -304,7 +343,6 @@
             let domainQuery = comp && comp !== "Unknown Airline" ? comp.toLowerCase().replace(/\s+/g, '') + '.com' : '';
             let logoUrl = domainQuery ? `https://logo.clearbit.com/${domainQuery}` : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
-            // Food Info Integration
             let foodRecommendation = "Check the onboard menu! ✈️";
             if (typeof AIRLINE_FOOD !== 'undefined' && AIRLINE_FOOD[comp]) {
                 foodRecommendation = AIRLINE_FOOD[comp];
@@ -327,6 +365,7 @@
                     Altitude: <span class="highlight">${lastPoint.altitude || 0} ft</span><br>
                     Speed: <span class="highlight">${lastPoint.speed || 0} kts</span><br>
                     Heading: <span class="highlight">${lastPoint.heading || 0}°</span><br>
+                    RSSI: <span class="highlight" style="color: ${getRssiColor(lastPoint.rssi, minVisibleVal, maxVisibleVal)}">${lastPoint.rssi || 0} dBm</span><br>
                     Last seen: <span class="highlight">${new Date(lastPoint.timestamp).toLocaleTimeString()}</span><br>
                     <div class="popup-footer">
                         <b>🍽️ In-Flight Dining:</b><br>${foodRecommendation}
@@ -348,7 +387,6 @@
                     if (!newPlanesData[p.address]) newPlanesData[p.address] = [];
                     newPlanesData[p.address].push(p);
                     
-                    // Find the latest timestamp as the baseline for Live and TimeFrame calculations
                     let timeMs = new Date(p.timestamp).getTime();
                     if (timeMs > globalMaxTimestampMs) globalMaxTimestampMs = timeMs;
                 });
@@ -361,10 +399,7 @@
             .catch(err => console.error("Could not load trail data:", err));
     }
 
-    // Initial load and build filters
     loadDataAndRender(true);
-
-    // Update data every 15 seconds without rebuilding objects (preserves checkbox state)
     setInterval(() => loadDataAndRender(false), 15000);
 
 </script>

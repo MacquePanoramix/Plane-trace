@@ -171,7 +171,7 @@ def save_data():
     global trail_points
     
     # 1. Auto-Cleanup: Keep only the latest 10,000 points to prevent infinite file growth and web UI lag.
-    MAX_POINTS = 10000
+    MAX_POINTS = 100000
     if len(trail_points) > MAX_POINTS:
         trail_points = trail_points[-MAX_POINTS:]
 
