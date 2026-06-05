@@ -87,6 +87,7 @@
         <div class="details-content">
             <label class="filter-label"><input type="radio" name="colormode" value="altitude" checked> By Altitude</label>
             <label class="filter-label"><input type="radio" name="colormode" value="rssi"> By Signal (RSSI)</label>
+            <label class="filter-label"><input type="radio" name="colormode" value="speed"> By Speed</label>
         </div>
     </details>
 
@@ -176,6 +177,34 @@
         return blendColor(yellow, green, (ratio - 0.5) / 0.5);
     }
 
+
+    function getSpeedColor(speed, minSpeed, maxSpeed) {
+        if (speed === null || speed === undefined || speed === "") return '#888';
+        const numericSpeed = Number(speed);
+        if (!Number.isFinite(numericSpeed)) return '#888';
+        if (maxSpeed === minSpeed) return '#ff00ff';
+        let ratio = (numericSpeed - minSpeed) / (maxSpeed - minSpeed);
+        ratio = Math.max(0, Math.min(1, ratio));
+        const colorStops = [
+            [0, 0, 0],        // black: slowest
+            [255, 0, 0],      // red
+            [255, 255, 0],    // yellow
+            [0, 255, 0],      // green
+            [0, 255, 255],    // cyan
+            [0, 0, 255],      // blue
+            [255, 0, 255]     // magenta/pink: fastest
+        ];
+        const scaledPosition = ratio * (colorStops.length - 1);
+        const startIndex = Math.floor(scaledPosition);
+        const endIndex = Math.min(startIndex + 1, colorStops.length - 1);
+        const localRatio = scaledPosition - startIndex;
+        return blendColor(
+            colorStops[startIndex],
+            colorStops[endIndex],
+            localRatio
+        );
+    }
+
     // Dynamic Legend Updater
     function updateLegend(mode, minVal, maxVal) {
         const title = document.getElementById('legend-title-text');
@@ -193,11 +222,16 @@
             bar.style.background = 'linear-gradient(to right, #F6A97A, #B8A7E8, #6F8DEB)';
             minLabel.textContent = `${Math.round(minVal).toLocaleString()} ft`;
             maxLabel.textContent = `${Math.round(maxVal).toLocaleString()} ft`;
-        } else {
+        } else if (mode === 'rssi') {
             title.textContent = 'Signal Strength (RSSI)';
             bar.style.background = 'linear-gradient(to right, #ef4444, #eab308, #22c55e)';
             minLabel.textContent = `${Math.round(minVal)} dBm`; // Lowest value (Red)
             maxLabel.textContent = `${Math.round(maxVal)} dBm`; // Highest value (Green)
+        } else if (mode === 'speed') {
+            title.textContent = 'Relative Speed';
+            bar.style.background = 'linear-gradient(to right, #000000, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff)';
+            minLabel.textContent = `${Math.round(minVal).toLocaleString()} kts`;
+            maxLabel.textContent = `${Math.round(maxVal).toLocaleString()} kts`;
         }
     }
 
@@ -295,7 +329,14 @@
             let validPoints = points.filter(p => new Date(p.timestamp).getTime() >= cutoffTimeMs);
 
             validPoints.forEach(point => {
-                let valToExtract = colorMode === 'altitude' ? point.altitude : point.rssi;
+                let valToExtract;
+                if (colorMode === 'altitude') {
+                    valToExtract = point.altitude;
+                } else if (colorMode === 'rssi') {
+                    valToExtract = point.rssi;
+                } else if (colorMode === 'speed') {
+                    valToExtract = point.speed;
+                }
                 if (valToExtract !== null && valToExtract !== undefined && valToExtract !== "") {
                     const num = Number(valToExtract);
                     if (Number.isFinite(num)) visibleValues.push(num);
@@ -327,9 +368,23 @@
             for (let i = 0; i < validPoints.length - 1; i++) {
                 let segmentColor;
                 if (colorMode === 'altitude') {
-                    segmentColor = getRelativeAltitudeColor(validPoints[i + 1].altitude, minVisibleVal, maxVisibleVal);
-                } else {
-                    segmentColor = getRssiColor(validPoints[i + 1].rssi, minVisibleVal, maxVisibleVal);
+                    segmentColor = getRelativeAltitudeColor(
+                        validPoints[i + 1].altitude,
+                        minVisibleVal,
+                        maxVisibleVal
+                    );
+                } else if (colorMode === 'rssi') {
+                    segmentColor = getRssiColor(
+                        validPoints[i + 1].rssi,
+                        minVisibleVal,
+                        maxVisibleVal
+                    );
+                } else if (colorMode === 'speed') {
+                    segmentColor = getSpeedColor(
+                        validPoints[i + 1].speed,
+                        minVisibleVal,
+                        maxVisibleVal
+                    );
                 }
 
                 let line = L.polyline([
